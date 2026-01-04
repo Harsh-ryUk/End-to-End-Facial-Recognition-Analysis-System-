@@ -28,22 +28,11 @@ class ReidMatcher:
 
     def match(self, embedding):
         """
-            tuple: (name, score) or (None, score) if below threshold.
+        Compare embedding against FAISS index.
+        Returns: (name, score)
         """
-        if not self.database:
+        if embedding is None:
             return "Unknown", 0.0
             
-        best_score = -1.0
-        best_name = "Unknown"
-        
-        for name, db_emb in self.database.items():
-            # Cosine similarity: dot product (since embeddings are normalized)
-            score = np.dot(embedding, db_emb)
-            if score > best_score:
-                best_score = score
-                best_name = name
-                
-        if best_score > self.threshold:
-            return best_name, best_score
-        else:
-            return "Unknown", best_score
+        name, score = self.db.search(embedding)
+        return name, score
