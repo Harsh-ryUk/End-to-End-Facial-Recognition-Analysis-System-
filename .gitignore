@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+models/*.onnx
+models/*.dat
+models/face_db.pkl
+.vscode/
+.idea/
+venv/
+env/
