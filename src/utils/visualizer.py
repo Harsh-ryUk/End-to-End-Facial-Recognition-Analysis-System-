@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def draw_results(frame, faces, landmarks_list, poses, names, scores, fps, latency):
+def draw_results(frame, faces, landmarks_list, poses, names, scores, fps, latency, blinks=None, attributes=None):
     """
     Draw all overlays on the frame.
     """
@@ -23,6 +23,23 @@ def draw_results(frame, faces, landmarks_list, poses, names, scores, fps, latenc
         # Label
         label = f"{name} ({match_score:.2f})"
         cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+        
+        # Attributes
+        if attributes is not None and len(attributes) > i:
+             attr = attributes[i]
+             if attr:
+                 attr_text = f"{attr['gender']}, {attr['age']}"
+                 cv2.putText(frame, attr_text, (x1, y2 + 40), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 200, 200), 2)
+        
+        # Blink Status
+        if blinks is not None and len(blinks) > i:
+            b_data = blinks[i]
+            # Show Blink Count
+            blink_text = f"Blinks: {b_data['blinks_total']} (EAR: {b_data['ear']:.2f})"
+            cv2.putText(frame, blink_text, (x1, y2 + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
+            
+            if b_data['is_blinking']:
+                cv2.putText(frame, "BLINK DETECTED!", (x1, y1 - 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
         
         # Landmarks (68 points)
         if landmarks_list is not None and len(landmarks_list) > i:

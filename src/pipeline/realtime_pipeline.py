@@ -9,6 +9,9 @@ from ..landmarks.head_pose import HeadPoseEstimator
 from ..utils.timing import FPSMeter, LatencyTracker
 from ..utils.visualizer import draw_results
 
+from ..liveness.blink_detector import BlinkDetector
+from ..analysis.attribute_estimator import AttributeEstimator
+
 class RealTimePipeline:
     def __init__(self, config):
         print("Initializing Pipeline...")
@@ -23,13 +26,17 @@ class RealTimePipeline:
         self.landmark_detector = LandmarkDetector(config['land_model'])
         self.head_pose = HeadPoseEstimator()
         
+        # New Liveness & Analytics
+        self.blink_detector = BlinkDetector()
+        self.attr_estimator = AttributeEstimator('models/genderage.onnx')
+        
         self.fps_meter = FPSMeter()
         self.tracker = LatencyTracker()
         
-        self.last_frame_data = None # Stores (enhanced_frame, faces, embeddings) for registration
+        self.last_frame_data = None 
         
         self.frame_count = 0
-        self.last_results = None # Store (faces, names, scores, landmarks, poses)
+        self.last_results = None # (faces, landmarks, poses, names, scores, blinks, attributes)
         
     def process_frame(self, frame):
         self.tracker.start('total')
@@ -39,29 +46,25 @@ class RealTimePipeline:
         self.tracker.start('enhance')
         enhanced_frame = self.enhancer.enhance(frame)
         self.tracker.end('enhance')
-        # enhanced_frame = frame
         
-        # Frame Skipping Logic
         if self.frame_count % 5 == 0 or self.last_results is None:
             # Full Inference
-            
-            # 2. Detection (SCRFD)
             self.tracker.start('detect')
             faces, kpss = self.detector.detect(enhanced_frame, max_num=10)
             self.tracker.end('detect')
             
             names = []
             scores = []
-            landmarks_detailed = [] # 68 points
+            landmarks_detailed = [] 
             poses = []
+            blinks = [] 
+            attributes = [] # New
             current_embeddings = []
             
-            # 3. Processing each face
             if faces is not None:
                 for i, face in enumerate(faces):
                     kps_5 = kpss[i] if kpss is not None else None
                     
-                    # Recognition (ArcFace)
                     self.tracker.start('recog')
                     embedding = self.recognizer.get_embedding(enhanced_frame, kps_5)
                     name, score = self.matcher.match(embedding)
@@ -69,36 +72,40 @@ class RealTimePipeline:
                     scores.append(score)
                     self.tracker.end('recog')
                     
-                    # Store for registration
                     current_embeddings.append(embedding)
                     
-                    # Landmarks (68) & Pose
                     self.tracker.start('pose')
-                    # Use face box for landmark detection
                     lms_68 = self.landmark_detector.detect(enhanced_frame, face[:4])
                     landmarks_detailed.append(lms_68)
                     
                     pose = self.head_pose.estimate(enhanced_frame, lms_68)
                     poses.append(pose)
                     self.tracker.end('pose')
+                    
+                    # Liveness Check
+                    blink_data = self.blink_detector.detect(lms_68)
+                    blinks.append(blink_data)
+                    
+                    # Attribute Check
+                    attr = self.attr_estimator.estimate(enhanced_frame, face[:4])
+                    attributes.append(attr)
             
-            # Update cache
-            self.last_results = (faces, landmarks_detailed, poses, names, scores)
+            self.last_results = (faces, landmarks_detailed, poses, names, scores, blinks, attributes)
             
-            # Update registration data
             self.last_frame_data = {
                 'embeddings': current_embeddings,
                 'faces': faces
             }
             
         else:
-            # Reuse last results
-            faces, landmarks_detailed, poses, names, scores = self.last_results
+            if self.last_results:
+                faces, landmarks_detailed, poses, names, scores, blinks, attributes = self.last_results
+            else:
+                faces, landmarks_detailed, poses, names, scores, blinks, attributes = [], [], [], [], [], [], []
         
-        # 4. Visualization & Timing
         fps, latency = self.fps_meter.update()
         total_lat = self.tracker.end('total')
         
-        vis_frame = draw_results(enhanced_frame, faces if faces is not None else [], landmarks_detailed, poses, names, scores, fps, total_lat)
+        vis_frame = draw_results(enhanced_frame, faces if faces is not None else [], landmarks_detailed, poses, names, scores, fps, total_lat, blinks, attributes)
         
         return vis_frame

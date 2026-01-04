@@ -11,9 +11,14 @@ A production-ready, high-performance computer vision system capable of real-time
 *   **Real-Time Performance**: < 50ms latency per frame on standard CPU/GPU.
 *   **Robust Detection**: Uses **SCRFD** (Sample and Computation Redistribution for Efficient Face Detection) for state-of-the-art accuracy.
 *   **High-Fidelity Recognition**: Powered by **ArcFace** (ResNet50 backbone) for deep face embedding and matching.
-*   **Advanced Analysis**:
+*   **Security & Anti-Spoofing**:
+    *   **Liveness Detection**: Integrated **Blink Detection** (Eye Aspect Ratio) to prevent photo attacks.
+*   **AI Analytics**:
+    *   **Demographics**: Real-time **Age & Gender Estimation** using ONNX models.
     *   **68-Point Landmarks**: Precise facial feature tracking.
-    *   **Head Pose Estimation**: Accurate Yaw, Pitch, and Roll calculation using SolvePnP.
+    *   **Head Pose Estimation**: Accurate Yaw, Pitch, and Roll calculation.
+*   **Scalable Database**:
+    *   **Vector Search**: Integrated **FAISS** (Facebook AI Similarity Search) for identifying millions of users efficiently.
 *   **Low-Light Enhancement**: Integrated CLAHE pre-processing stage improves accuracy in dim lighting by ~15%.
 *   **Modular Architecture**: Clean, component-based design ready for integration.
 

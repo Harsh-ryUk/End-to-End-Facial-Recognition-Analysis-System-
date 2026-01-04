@@ -6,7 +6,8 @@ import shutil
 MODELS = {
     "scrfd_10g_bnkps.onnx": "https://huggingface.co/Aitrepreneur/insightface/resolve/main/models/antelopev2/scrfd_10g_bnkps.onnx",
     "w600k_r50.onnx": "https://huggingface.co/Aitrepreneur/insightface/resolve/main/models/buffalo_l/w600k_r50.onnx",
-    "shape_predictor_68_face_landmarks.dat.bz2": "http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2"
+    "shape_predictor_68_face_landmarks.dat.bz2": "http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2",
+    "genderage.onnx": "https://huggingface.co/Aitrepreneur/insightface/resolve/main/models/antelopev2/genderage.onnx"
 }
 
 OUTPUT_DIR = "models"
