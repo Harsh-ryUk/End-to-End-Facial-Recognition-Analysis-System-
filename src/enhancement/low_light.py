@@ -42,4 +42,8 @@ class LowLightEnhancer:
         lab_enhanced = cv2.merge((l_enhanced, a, b))
         enhanced_image = cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2BGR)
         
+        # Denoising (Bilateral Filter)
+        # Removes noise ("fake wrinkles") while keeping edges sharp
+        enhanced_image = cv2.bilateralFilter(enhanced_image, d=5, sigmaColor=50, sigmaSpace=50)
+        
         return enhanced_image
